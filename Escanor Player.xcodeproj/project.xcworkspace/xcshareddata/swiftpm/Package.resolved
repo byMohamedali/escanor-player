@@ -1,0 +1,33 @@
+{
+  "originHash" : "9096ef445f2b9f1b33408e48cd5bb0f060a50d694614e5608d1b1adf9009ed91",
+  "pins" : [
+    {
+      "identity" : "defaults",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/sindresorhus/Defaults.git",
+      "state" : {
+        "revision" : "8192b0986611e105355a9433e99bf5c79469fbbd",
+        "version" : "9.0.6"
+      }
+    },
+    {
+      "identity" : "ffmpegkit-private",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/byMohamedali/FFMPEGKit-private.git",
+      "state" : {
+        "branch" : "lgpl",
+        "revision" : "74d12ff9f23a385586c70b5791665e7bcbc5ffea"
+      }
+    },
+    {
+      "identity" : "swift-syntax",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/swiftlang/swift-syntax",
+      "state" : {
+        "revision" : "4799286537280063c85a32f09884cfbca301b1a1",
+        "version" : "602.0.0"
+      }
+    }
+  ],
+  "version" : 3
+}

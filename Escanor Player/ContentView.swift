@@ -6,61 +6,45 @@
 //
 
 import SwiftUI
-import SwiftData
 
 struct ContentView: View {
-    @Environment(\.modelContext) private var modelContext
-    @Query private var items: [Item]
+    @State private var selection: Tab = .library
+
+    enum Tab: Hashable {
+        case library
+        case network
+        case settings
+
+        var label: some View {
+            switch self {
+            case .library:
+                Label("Library", systemImage: "play.rectangle.on.rectangle")
+            case .network:
+                Label("Network", systemImage: "server.rack")
+            case .settings:
+                Label("Settings", systemImage: "gearshape")
+            }
+        }
+    }
 
     var body: some View {
-        NavigationSplitView {
-            List {
-                ForEach(items) { item in
-                    NavigationLink {
-                        Text("Item at \(item.timestamp, format: Date.FormatStyle(date: .numeric, time: .standard))")
-                    } label: {
-                        Text(item.timestamp, format: Date.FormatStyle(date: .numeric, time: .standard))
-                    }
-                }
-                .onDelete(perform: deleteItems)
-            }
-#if os(macOS)
-            .navigationSplitViewColumnWidth(min: 180, ideal: 200)
-#endif
-            .toolbar {
-#if os(iOS)
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    EditButton()
-                }
-#endif
-                ToolbarItem {
-                    Button(action: addItem) {
-                        Label("Add Item", systemImage: "plus")
-                    }
-                }
-            }
-        } detail: {
-            Text("Select an item")
-        }
-    }
+        TabView(selection: $selection) {
+            LibraryHomeView()
+                .tabItem { Tab.library.label }
+                .tag(Tab.library)
 
-    private func addItem() {
-        withAnimation {
-            let newItem = Item(timestamp: Date())
-            modelContext.insert(newItem)
-        }
-    }
+            NetworkHomeView()
+                .tabItem { Tab.network.label }
+                .tag(Tab.network)
 
-    private func deleteItems(offsets: IndexSet) {
-        withAnimation {
-            for index in offsets {
-                modelContext.delete(items[index])
-            }
+            SettingsHomeView()
+                .tabItem { Tab.settings.label }
+                .tag(Tab.settings)
         }
     }
 }
 
 #Preview {
     ContentView()
-        .modelContainer(for: Item.self, inMemory: true)
+        .preferredColorScheme(.dark)
 }

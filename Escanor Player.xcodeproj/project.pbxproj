@@ -6,8 +6,18 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		D338E4F72ECA20AB0066C175 /* PlayerKit in Frameworks */ = {isa = PBXBuildFile; productRef = D338E4F62ECA20AB0066C175 /* PlayerKit */; };
+		D338E5FD2ECB20D10066C175 /* Defaults in Frameworks */ = {isa = PBXBuildFile; productRef = D338E5FC2ECB20D10066C175 /* Defaults */; };
+		D338E5FF2ECB20D10066C175 /* DefaultsMacros in Frameworks */ = {isa = PBXBuildFile; productRef = D338E5FE2ECB20D10066C175 /* DefaultsMacros */; };
+		D338E60D2ECB36000066C175 /* Metal.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D338E60C2ECB35FF0066C175 /* Metal.framework */; };
+		D338E60F2ECB360C0066C175 /* VideoToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D338E60E2ECB360C0066C175 /* VideoToolbox.framework */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
 		D338E4E52ECA20680066C175 /* Escanor Player.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Escanor Player.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		D338E60C2ECB35FF0066C175 /* Metal.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Metal.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.1.sdk/System/Library/Frameworks/Metal.framework; sourceTree = DEVELOPER_DIR; };
+		D338E60E2ECB360C0066C175 /* VideoToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = VideoToolbox.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.1.sdk/System/Library/Frameworks/VideoToolbox.framework; sourceTree = DEVELOPER_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -23,6 +33,11 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D338E5FF2ECB20D10066C175 /* DefaultsMacros in Frameworks */,
+				D338E5FD2ECB20D10066C175 /* Defaults in Frameworks */,
+				D338E60F2ECB360C0066C175 /* VideoToolbox.framework in Frameworks */,
+				D338E60D2ECB36000066C175 /* Metal.framework in Frameworks */,
+				D338E4F72ECA20AB0066C175 /* PlayerKit in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -33,6 +48,7 @@
 			isa = PBXGroup;
 			children = (
 				D338E4E72ECA20680066C175 /* Escanor Player */,
+				D338E60B2ECB35FF0066C175 /* Frameworks */,
 				D338E4E62ECA20680066C175 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -43,6 +59,15 @@
 				D338E4E52ECA20680066C175 /* Escanor Player.app */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		D338E60B2ECB35FF0066C175 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				D338E60E2ECB360C0066C175 /* VideoToolbox.framework */,
+				D338E60C2ECB35FF0066C175 /* Metal.framework */,
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -65,6 +90,9 @@
 			);
 			name = "Escanor Player";
 			packageProductDependencies = (
+				D338E4F62ECA20AB0066C175 /* PlayerKit */,
+				D338E5FC2ECB20D10066C175 /* Defaults */,
+				D338E5FE2ECB20D10066C175 /* DefaultsMacros */,
 			);
 			productName = "Escanor Player";
 			productReference = D338E4E52ECA20680066C175 /* Escanor Player.app */;
@@ -94,6 +122,10 @@
 			);
 			mainGroup = D338E4DC2ECA20680066C175;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				D338E4F52ECA20AB0066C175 /* XCLocalSwiftPackageReference "../PlayerKit" */,
+				D338E5FB2ECB20D10066C175 /* XCRemoteSwiftPackageReference "Defaults" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = D338E4E62ECA20680066C175 /* Products */;
 			projectDirPath = "";
@@ -242,14 +274,17 @@
 		D338E4F32ECA20690066C175 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_APPICON_NAME = "escanor-player-logo";
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = "Escanor Player/Escanor Player.entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = C7FJ83D67F;
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "Escanor-Player-Info.plist";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -284,14 +319,17 @@
 		D338E4F42ECA20690066C175 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_APPICON_NAME = "escanor-player-logo";
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = "Escanor Player/Escanor Player.entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = C7FJ83D67F;
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "Escanor-Player-Info.plist";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -345,6 +383,41 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		D338E4F52ECA20AB0066C175 /* XCLocalSwiftPackageReference "../PlayerKit" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = ../PlayerKit;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		D338E5FB2ECB20D10066C175 /* XCRemoteSwiftPackageReference "Defaults" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/sindresorhus/Defaults.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 9.0.6;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		D338E4F62ECA20AB0066C175 /* PlayerKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = PlayerKit;
+		};
+		D338E5FC2ECB20D10066C175 /* Defaults */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D338E5FB2ECB20D10066C175 /* XCRemoteSwiftPackageReference "Defaults" */;
+			productName = Defaults;
+		};
+		D338E5FE2ECB20D10066C175 /* DefaultsMacros */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D338E5FB2ECB20D10066C175 /* XCRemoteSwiftPackageReference "Defaults" */;
+			productName = DefaultsMacros;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = D338E4DD2ECA20680066C175 /* Project object */;
 }
