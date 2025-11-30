@@ -6,23 +6,67 @@
 //
 
 import Foundation
+import AMSMB2
 
-/// Minimal SMB adapter. Replace stubbed calls with a concrete SMB client (e.g. libsmb2).
-struct SMBSource: RemoteSource {
-    let host: String
-    let username: String?
-    let password: String?
+class SMBSource: RemoteSource {
+    let serverHost: String
+    let share: String
+    let credential: URLCredential
 
-    var displayName: String { "SMB \(host)" }
+    var displayName: String { "SMB \(serverHost)/\(share)" }
+
+    private lazy var manager: SMB2Manager? = {
+        guard let url = URL(string: "smb://\(serverHost)") else { return nil }
+        return SMB2Manager(url: url, credential: credential)
+    }()
+
+    init(host: String, username: String?, password: String?) {
+        let parts = host.split(separator: "/", maxSplits: 1, omittingEmptySubsequences: true)
+        if parts.count == 2 {
+            self.serverHost = String(parts[0])
+            self.share = String(parts[1])
+        } else {
+            self.serverHost = host
+            self.share = "share"
+        }
+        self.credential = URLCredential(user: username ?? "guest", password: password ?? "", persistence: .forSession)
+    }
+
+    private func connect() async throws -> SMB2Manager {
+        guard let manager else {
+            throw NSError(domain: "SMBSource", code: -1, userInfo: [NSLocalizedDescriptionKey: "Invalid SMB URL"])
+        }
+        try await manager.connectShare(name: share)
+        return manager
+    }
 
     func list(at path: String) async throws -> [RemoteItem] {
-        // TODO: Integrate SMB client. For now, return empty to keep app compiling.
-        return []
+        let client = try await connect()
+        let remotePath = path.isEmpty ? "/" : path
+        let entries = try await client.contentsOfDirectory(atPath: remotePath)
+        return entries.compactMap { entry in
+            guard
+                let name = entry[.nameKey] as? String,
+                let path = entry[.pathKey] as? String,
+                let type = entry[.fileResourceTypeKey] as? URLFileResourceType
+            else { return nil }
+
+            let size = entry[.fileSizeKey] as? Int64
+            let modified = entry[.contentModificationDateKey] as? Date
+            return RemoteItem(
+                path: path,
+                name: name,
+                isDirectory: type == .directory,
+                size: size != nil ? Int(size!) : nil,
+                modifiedAt: modified
+            )
+        }
     }
 
     func openFile(at path: String) async throws -> URL {
-        // TODO: Download to temp file or stream if supported by PlayerKit.
-        throw NSError(domain: "SMBSource", code: -1, userInfo: [NSLocalizedDescriptionKey: "SMB streaming not implemented yet."])
+        let client = try await connect()
+        let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+//        try await client.copyItem(atPath: path)
+        return URL(string: path)!
     }
 }
-

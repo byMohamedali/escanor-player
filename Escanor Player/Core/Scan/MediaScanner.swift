@@ -77,35 +77,45 @@ final class MediaScanner: ObservableObject {
     private func scanSMBShare(share: SavedShareRecord, host: String, username: String?, password: String?) async {
         let smb = SMBSource(host: host, username: username, password: password)
         do {
-            let items = try await smb.list(at: "/")
-            let now = Date()
-            for item in items where !item.isDirectory {
-                let key = mediaKey(for: share.id, smbPath: item.path, size: item.size ?? 0, mtime: item.modifiedAt?.timeIntervalSince1970 ?? 0)
-                let guessed = guess(from: URL(fileURLWithPath: item.name))
-                try await insertOrUpdateMediaUsingDraft(
-                    MediaItem(
-                        id: key,
-                        shareId: share.id,
-                        path: item.path,
-                        size: item.size,
-                        mtime: item.modifiedAt?.timeIntervalSince1970,
-                        kind: guessed.kind,
-                        tmdbId: nil,
-                        seriesTmdbId: nil,
-                        episodeTmdbId: nil,
-                        seasonNumber: guessed.season,
-                        episodeNumber: guessed.episode,
-                        titleGuess: guessed.title,
-                        yearGuess: guessed.year,
-                        discoveredAt: now,
-                        lastSeenAt: now
-                    )
-                )
-            }
+            try await scanSMBPath(smb: smb, share: share, path: "/", depth: 0)
         } catch {
 #if DEBUG
             print("SMB scan failed: \(error)")
 #endif
+        }
+    }
+
+    private func scanSMBPath(smb: SMBSource, share: SavedShareRecord, path: String, depth: Int) async throws {
+        if depth > 4 { return }
+        let items = try await smb.list(at: path)
+        let now = Date()
+        for item in items {
+            if item.isDirectory {
+                try await scanSMBPath(smb: smb, share: share, path: item.path, depth: depth + 1)
+                continue
+            }
+
+            let key = mediaKey(for: share.id, smbPath: item.path, size: item.size ?? 0, mtime: item.modifiedAt?.timeIntervalSince1970 ?? 0)
+            let guessed = guess(from: URL(fileURLWithPath: item.name))
+            try await insertOrUpdateMedia(
+                MediaItem(
+                    id: key,
+                    shareId: share.id,
+                    path: item.path,
+                    size: item.size,
+                    mtime: item.modifiedAt?.timeIntervalSince1970,
+                    kind: guessed.kind,
+                    tmdbId: nil,
+                    seriesTmdbId: nil,
+                    episodeTmdbId: nil,
+                    seasonNumber: guessed.season,
+                    episodeNumber: guessed.episode,
+                    titleGuess: guessed.title,
+                    yearGuess: guessed.year,
+                    discoveredAt: now,
+                    lastSeenAt: now
+                )
+            )
         }
     }
 
@@ -241,7 +251,7 @@ final class MediaScanner: ObservableObject {
     private func insertOrUpdateMediaUsingDraft(_ item: MediaItem) async throws {
         try await database.write { db in
             do {
-                try MediaItem.insert { MediaItem.Draft(item) }
+                try MediaItem.upsert { MediaItem.Draft(item) }
                 .execute(db)
             } catch {
 #if DEBUG

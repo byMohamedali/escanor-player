@@ -13,8 +13,23 @@
 		D338E60D2ECB36000066C175 /* Metal.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D338E60C2ECB35FF0066C175 /* Metal.framework */; };
 		D338E60F2ECB360C0066C175 /* VideoToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D338E60E2ECB360C0066C175 /* VideoToolbox.framework */; };
 		D36D9E2D2EDAC31000B7D9E0 /* SQLiteData in Frameworks */ = {isa = PBXBuildFile; productRef = D36D9E2C2EDAC31000B7D9E0 /* SQLiteData */; };
-		D36DA0732EDC840D00B7D9E0 /* AMSMB2 in Frameworks */ = {isa = PBXBuildFile; productRef = D36DA0722EDC840D00B7D9E0 /* AMSMB2 */; };
+		D36DA0862EDC8F0A00B7D9E0 /* AMSMB2 in Frameworks */ = {isa = PBXBuildFile; productRef = D36DA0852EDC8F0A00B7D9E0 /* AMSMB2 */; };
+		D36DA0872EDC8F0A00B7D9E0 /* AMSMB2 in Embed Frameworks */ = {isa = PBXBuildFile; productRef = D36DA0852EDC8F0A00B7D9E0 /* AMSMB2 */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 /* End PBXBuildFile section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		D36DA0882EDC8F0A00B7D9E0 /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				D36DA0872EDC8F0A00B7D9E0 /* AMSMB2 in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		D338E4E52ECA20680066C175 /* Escanor Player.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Escanor Player.app"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -41,7 +56,7 @@
 				D338E60F2ECB360C0066C175 /* VideoToolbox.framework in Frameworks */,
 				D338E60D2ECB36000066C175 /* Metal.framework in Frameworks */,
 				D338E4F72ECA20AB0066C175 /* PlayerKit in Frameworks */,
-				D36DA0732EDC840D00B7D9E0 /* AMSMB2 in Frameworks */,
+				D36DA0862EDC8F0A00B7D9E0 /* AMSMB2 in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -84,6 +99,7 @@
 				D338E4E12ECA20680066C175 /* Sources */,
 				D338E4E22ECA20680066C175 /* Frameworks */,
 				D338E4E32ECA20680066C175 /* Resources */,
+				D36DA0882EDC8F0A00B7D9E0 /* Embed Frameworks */,
 			);
 			buildRules = (
 			);
@@ -98,7 +114,7 @@
 				D338E5FC2ECB20D10066C175 /* Defaults */,
 				D338E5FE2ECB20D10066C175 /* DefaultsMacros */,
 				D36D9E2C2EDAC31000B7D9E0 /* SQLiteData */,
-				D36DA0722EDC840D00B7D9E0 /* AMSMB2 */,
+				D36DA0852EDC8F0A00B7D9E0 /* AMSMB2 */,
 			);
 			productName = "Escanor Player";
 			productReference = D338E4E52ECA20680066C175 /* Escanor Player.app */;
@@ -293,6 +309,7 @@
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "Escanor-Player-Info.plist";
+				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "This allows Escanor Player to discover and connect to your home media servers (SMB/NAS) on your local network.”";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -338,6 +355,7 @@
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "Escanor-Player-Info.plist";
+				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "This allows Escanor Player to discover and connect to your home media servers (SMB/NAS) on your local network.”";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -446,7 +464,7 @@
 			package = D36D9E2B2EDAC31000B7D9E0 /* XCRemoteSwiftPackageReference "sqlite-data" */;
 			productName = SQLiteData;
 		};
-		D36DA0722EDC840D00B7D9E0 /* AMSMB2 */ = {
+		D36DA0852EDC8F0A00B7D9E0 /* AMSMB2 */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = D36DA0712EDC840D00B7D9E0 /* XCRemoteSwiftPackageReference "AMSMB2" */;
 			productName = AMSMB2;

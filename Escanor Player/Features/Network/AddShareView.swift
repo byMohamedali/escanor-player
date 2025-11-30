@@ -9,10 +9,12 @@ import SwiftUI
 import UniformTypeIdentifiers
 import Dependencies
 import SQLiteData
+import Network
 
 struct AddShareView: View {
     @Environment(\.dismiss) private var dismiss
     @Dependency(\.defaultDatabase) private var database
+    @StateObject private var bonjourDiscovery = BonjourDiscovery()
 
     @State private var showingFolderPicker = false
     @State private var smbFormPresented = false
@@ -23,6 +25,34 @@ struct AddShareView: View {
 
     var body: some View {
         List {
+            if !bonjourDiscovery.services.isEmpty || bonjourDiscovery.isSearching {
+                Section("Available Shares") {
+                    if bonjourDiscovery.isSearching {
+                        HStack {
+                            ProgressView()
+                            Text("Searching...")
+                        }
+                    }
+                    ForEach(bonjourDiscovery.services) { service in
+                        Button {
+                            handleResolvedSMB(service)
+                        } label: {
+                            HStack(spacing: 12) {
+                                Image(systemName: "server.rack")
+                                    .foregroundStyle(.tint)
+                                VStack(alignment: .leading) {
+                                    Text(service.name)
+                                        .foregroundStyle(.primary)
+                                    Text(service.host)
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                }
+                                Spacer()
+                            }
+                        }
+                    }
+                }
+            }
             ForEach(ProviderCategory.allCases) { category in
                 Section(category.title) {
                     ForEach(providers(for: category)) { provider in
@@ -32,6 +62,12 @@ struct AddShareView: View {
                     }
                 }
             }
+        }
+        .onAppear {
+            bonjourDiscovery.start()
+        }
+        .onDisappear {
+            bonjourDiscovery.stop()
         }
         .navigationTitle("Add Share")
         .navigationBarTitleDisplayMode(.inline)
@@ -97,6 +133,16 @@ struct AddShareView: View {
         default:
             infoMessage = "\(provider.displayName) is planned for later."
         }
+    }
+
+    private func handleResolvedSMB(_ service: DiscoveredSMB) {
+        smbDraft = SMBFormData(
+            name: service.name,
+            host: "\(service.host):\(service.port)",
+            username: "",
+            password: ""
+        )
+        smbFormPresented = true
     }
 
     private func providers(for category: ProviderCategory) -> [ProviderKind] {
