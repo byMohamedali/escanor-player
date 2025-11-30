@@ -45,6 +45,16 @@ final class PlayerController: ObservableObject {
         hasLoadedSource = true
     }
 
+    func playLocalFile(at url: URL) {
+        player?.play(with: url)
+        hasLoadedSource = true
+    }
+
+    func seek(by delta: TimeInterval) {
+        let target = max(0, currentTime + delta)
+        seek(to: target)
+    }
+
     func togglePlayPause() {
         player?.playOrPause()
     }

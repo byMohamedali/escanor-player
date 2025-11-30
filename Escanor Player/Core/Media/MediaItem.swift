@@ -19,10 +19,9 @@ nonisolated struct MediaItem: Identifiable {
         case other
     }
 
-    let id: UUID
+    let id: String // mediaKey
     var shareId: UUID
     var path: String
-    var mediaKey: String
     var size: Int?
     var mtime: TimeInterval?
     var kind: Kind
@@ -37,10 +36,9 @@ nonisolated struct MediaItem: Identifiable {
     var lastSeenAt: Date?
 
     init(
-        id: UUID = UUID(),
+        id: String = UUID().uuidString,
         shareId: UUID,
         path: String,
-        mediaKey: String,
         size: Int? = nil,
         mtime: TimeInterval? = nil,
         kind: Kind = .other,
@@ -57,7 +55,6 @@ nonisolated struct MediaItem: Identifiable {
         self.id = id
         self.shareId = shareId
         self.path = path
-        self.mediaKey = mediaKey
         self.size = size
         self.mtime = mtime
         self.kind = kind
@@ -79,7 +76,6 @@ extension MediaItem {
             t.primaryKey("id", .text).unique()
             t.column("shareId", .text).notNull()
             t.column("path", .text).notNull()
-            t.column("mediaKey", .text).notNull().unique()
             t.column("size", .integer)
             t.column("mtime", .double)
             t.column("kind", .text).notNull()

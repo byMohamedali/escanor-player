@@ -69,7 +69,8 @@ final class MediaScanner: ObservableObject {
         let resourceKeys: Set<URLResourceKey> = [
             .isRegularFileKey,
             .fileSizeKey,
-            .contentModificationDateKey
+            .contentModificationDateKey,
+            .fileResourceIdentifierKey
         ]
 
         var stopAccess = false
@@ -106,16 +107,24 @@ final class MediaScanner: ObservableObject {
 
                 let size = values.fileSize
                 let mtime = values.contentModificationDate?.timeIntervalSince1970
-                let key = mediaKey(for: share.id, path: next.path, size: size ?? 0, mtime: mtime ?? 0)
+                let identifier = values.fileResourceIdentifier as? Data
+                let key = mediaKey(
+                    for: share.id,
+                    root: url,
+                    fileURL: next,
+                    size: size ?? 0,
+                    mtime: mtime ?? 0,
+                    resourceIdentifier: identifier
+                )
 
                 let guessed = guess(from: next)
                 let now = Date()
 
                 try await insertOrUpdateMediaUsingDraft(
                     MediaItem(
+                        id: key,
                         shareId: share.id,
                         path: next.path,
-                        mediaKey: key,
                         size: size,
                         mtime: mtime,
                         kind: guessed.kind,
@@ -143,9 +152,9 @@ final class MediaScanner: ObservableObject {
             try db.execute(
                 sql: """
                 INSERT INTO mediaItems
-                (id, shareId, path, mediaKey, size, mtime, kind, tmdbId, seriesTmdbId, episodeTmdbId, seasonNumber, episodeNumber, titleGuess, yearGuess, discoveredAt, lastSeenAt)
-                VALUES (:id, :shareId, :path, :mediaKey, :size, :mtime, :kind, :tmdbId, :seriesTmdbId, :episodeTmdbId, :seasonNumber, :episodeNumber, :titleGuess, :yearGuess, :discoveredAt, :lastSeenAt)
-                ON CONFLICT(mediaKey) DO UPDATE SET
+                (id, shareId, path, size, mtime, kind, tmdbId, seriesTmdbId, episodeTmdbId, seasonNumber, episodeNumber, titleGuess, yearGuess, discoveredAt, lastSeenAt)
+                VALUES (:id, :shareId, :path, :size, :mtime, :kind, :tmdbId, :seriesTmdbId, :episodeTmdbId, :seasonNumber, :episodeNumber, :titleGuess, :yearGuess, :discoveredAt, :lastSeenAt)
+                ON CONFLICT(id) DO UPDATE SET
                     path = excluded.path,
                     size = excluded.size,
                     mtime = excluded.mtime,
@@ -161,10 +170,9 @@ final class MediaScanner: ObservableObject {
                     discoveredAt = COALESCE(mediaItems.discoveredAt, excluded.discoveredAt)
                 """,
                 arguments: [
-                    "id": item.id.uuidString,
+                    "id": item.id,
                     "shareId": item.shareId.uuidString,
                     "path": item.path,
-                    "mediaKey": item.mediaKey,
                     "size": item.size,
                     "mtime": item.mtime,
                     "kind": item.kind.rawValue,
@@ -197,8 +205,15 @@ final class MediaScanner: ObservableObject {
         }
     }
 
-    private func mediaKey(for shareId: UUID, path: String, size: Int, mtime: TimeInterval) -> String {
-        let input = "\(shareId.uuidString.lowercased())|\(path.lowercased())|\(size)|\(mtime)"
+    private func mediaKey(for shareId: UUID, root: URL, fileURL: URL, size: Int, mtime: TimeInterval, resourceIdentifier: Data?) -> String {
+        if let resourceIdentifier {
+            let input = "\(shareId.uuidString.lowercased())|\(resourceIdentifier.base64EncodedString())|\(size)"
+            let hash = SHA256.hash(data: Data(input.utf8))
+            return hash.compactMap { String(format: "%02x", $0) }.joined()
+        }
+
+        let relativePath = fileURL.path.replacingOccurrences(of: root.path, with: "").trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+        let input = "\(shareId.uuidString.lowercased())|\(relativePath.lowercased())|\(size)|\(mtime)"
         let hash = SHA256.hash(data: Data(input.utf8))
         return hash.compactMap { String(format: "%02x", $0) }.joined()
     }

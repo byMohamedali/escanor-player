@@ -12,6 +12,7 @@ import Dependencies
 struct LibraryHomeView: View {
     @FetchAll(MediaItem.order(by: \.lastSeenAt)) private var items: [MediaItem]
     @Dependency(\.defaultDatabase) private var database
+    @State private var selectedItem: MediaItem?
 
     private let columns = [GridItem(.adaptive(minimum: 140), spacing: 16)]
 
@@ -21,6 +22,11 @@ struct LibraryHomeView: View {
                 LazyVGrid(columns: columns, alignment: .leading, spacing: 18) {
                     ForEach(items) { item in
                         MediaCard(item: item)
+                            .onTapGesture {
+                                Task {
+                                    await requestAccessAndPlay(item)
+                                }
+                            }
                     }
                 }
                 .padding(.horizontal, 20)
@@ -29,6 +35,48 @@ struct LibraryHomeView: View {
             }
             .background(Color(.systemGroupedBackground))
             .navigationTitle("Library")
+        }
+        .fullScreenCover(item: $selectedItem) { item in
+            PlayerView(mediaItem: item)
+                .ignoresSafeArea()
+        }
+    }
+
+    private func requestAccessAndPlay(_ item: MediaItem) async {
+        do {
+            let share = try await database.read { db in
+                try SavedShareRecord.find(item.shareId).fetchOne(db)
+            }
+            guard let share, let kind = share.kind else { return }
+
+            switch kind {
+            case .localFolder(let url, let bookmark):
+                var resolvedURL: URL? = url
+                var stale: Bool = false
+                if let bookmark {
+                    resolvedURL = try? URL(resolvingBookmarkData: bookmark, options: [.withoutUI], relativeTo: nil, bookmarkDataIsStale: &stale)
+                }
+
+                guard let target = resolvedURL else { return }
+                let granted = target.startAccessingSecurityScopedResource()
+                if granted || FileManager.default.isReadableFile(atPath: target.path) {
+                    var newItem = item
+                    let filename = URL(filePath: item.path).lastPathComponent
+                    newItem.path = target.path() + filename
+                    selectedItem = newItem
+                } else {
+#if DEBUG
+                    print("Access denied for \(target)")
+#endif
+                }
+
+            default:
+                selectedItem = item
+            }
+        } catch {
+#if DEBUG
+            print("Failed to resolve share for playback: \(error)")
+#endif
         }
     }
 }
