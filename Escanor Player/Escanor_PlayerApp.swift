@@ -21,6 +21,7 @@ struct Escanor_PlayerApp: App {
     var body: some Scene {
         WindowGroup {
             RootView()
+                .environmentObject(MediaScanner())
         }
     }
 }

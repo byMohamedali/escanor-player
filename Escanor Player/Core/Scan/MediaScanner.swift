@@ -17,12 +17,15 @@ import SQLiteData
 @MainActor
 final class MediaScanner: ObservableObject {
     @Dependency(\.defaultDatabase) private var database
+    @Published private(set) var isScanning = false
 
     private let videoExtensions: Set<String> = [
         "mp4", "m4v", "mkv", "mov", "avi", "wmv", "flv", "mpg", "mpeg", "ts", "m2ts"
     ]
 
     func scanAllShares() async {
+        guard !isScanning else { return }
+        isScanning = true
         do {
             let shares: [SavedShareRecord] = try await database.read { db in
                 try SavedShareRecord.all.fetchAll(db)
@@ -39,6 +42,7 @@ final class MediaScanner: ObservableObject {
             print("Scan failed: \(error)")
 #endif
         }
+        isScanning = false
     }
 
     // MARK: - Private

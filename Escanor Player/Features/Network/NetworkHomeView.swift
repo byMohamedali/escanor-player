@@ -12,8 +12,8 @@ import Dependencies
 struct NetworkHomeView: View {
     @FetchAll(SavedShareRecord.order(by: \.name)) private var shareRecords: [SavedShareRecord]
     @Dependency(\.defaultDatabase) private var database
+    @EnvironmentObject private var scanner: MediaScanner
     @State private var showingAddShare = false
-    @StateObject private var scanner = MediaScanner()
 
     private var shares: [SavedShare] {
         shareRecords.compactMap { $0.toDomain() }
@@ -43,6 +43,19 @@ struct NetworkHomeView: View {
             .listStyle(.insetGrouped)
             .navigationTitle("Network")
             .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {
+                        Task { await scanner.scanAllShares() }
+                    } label: {
+                        if scanner.isScanning {
+                            ProgressView()
+                                .progressViewStyle(.circular)
+                        } else {
+                            Image(systemName: "arrow.clockwise")
+                        }
+                    }
+                }
+
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
                         showingAddShare = true

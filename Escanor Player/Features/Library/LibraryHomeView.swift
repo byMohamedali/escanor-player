@@ -12,6 +12,7 @@ import Dependencies
 struct LibraryHomeView: View {
     @FetchAll(MediaItem.order(by: \.lastSeenAt)) private var items: [MediaItem]
     @Dependency(\.defaultDatabase) private var database
+    @EnvironmentObject private var scanner: MediaScanner
     @State private var selectedItem: MediaItem?
 
     private let columns = [GridItem(.adaptive(minimum: 140), spacing: 16)]
@@ -35,6 +36,20 @@ struct LibraryHomeView: View {
             }
             .background(Color(.systemGroupedBackground))
             .navigationTitle("Library")
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {
+                        Task { await scanner.scanAllShares() }
+                    } label: {
+                        if scanner.isScanning {
+                            ProgressView()
+                                .progressViewStyle(.circular)
+                        } else {
+                            Image(systemName: "arrow.clockwise")
+                        }
+                    }
+                }
+            }
         }
         .fullScreenCover(item: $selectedItem) { item in
             PlayerView(mediaItem: item)
