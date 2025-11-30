@@ -22,12 +22,31 @@ extension DependencyValues {
         migrator.registerMigration("createSavedShares") { db in
             try SavedShareRecord.migrate(db: db)
         }
+        migrator.registerMigration("createMediaItems") { db in
+            try MediaItem.migrate(db: db)
+        }
+        migrator.registerMigration("createTMDBMetas") { db in
+            try TMDBMeta.migrate(db: db)
+            try EpisodeMeta.migrate(db: db)
+            try TMDBGenre.migrate(db: db)
+            try TMDBMediaGenre.migrate(db: db)
+        }
+        migrator.registerMigration("createInteractions") { db in
+            try PlaybackState.migrate(db: db)
+            try MediaCollection.migrate(db: db)
+            try MediaCollectionMembership.migrate(db: db)
+            try UserFlags.migrate(db: db)
+        }
 
         try migrator.migrate(database)
         defaultDatabase = database
         defaultSyncEngine = try SyncEngine(
             for: database,
-            tables: SavedShareRecord.self
+            tables: SavedShareRecord.self,
+            PlaybackState.self,
+            MediaCollection.self,
+            MediaCollectionMembership.self,
+            UserFlags.self
         )
 
         logger.debug("Database ready at \(database.path)")
