@@ -1,6 +1,15 @@
 {
-  "originHash" : "aaf5676546376829925cb4f6c7ab63ae8ecdbe3642596a16d729f9af42e485ef",
+  "originHash" : "b09d73d13c241c27c96484767c5cc2af369b903a3815463cf3bdb9987d7f89db",
   "pins" : [
+    {
+      "identity" : "amsmb2",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/amosavian/AMSMB2.git",
+      "state" : {
+        "revision" : "1726aaaf7adf63d7d1d2a0c5d1b0e635028215c0",
+        "version" : "4.0.3"
+      }
+    },
     {
       "identity" : "combine-schedulers",
       "kind" : "remoteSourceControl",
