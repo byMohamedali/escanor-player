@@ -276,10 +276,12 @@ private let savedShareEncoder = JSONEncoder()
 private let savedShareDecoder = JSONDecoder()
 
 extension SavedShareRecord {
+    var kind: SavedShareKind? {
+        try? savedShareDecoder.decode(SavedShareKind.self, from: kindData)
+    }
+
     func toDomain() -> SavedShare? {
-        guard let kind = try? savedShareDecoder.decode(SavedShareKind.self, from: kindData) else {
-            return nil
-        }
+        guard let kind else { return nil }
         return SavedShare(id: id, name: name, kind: kind, lastAccess: lastAccess)
     }
 
