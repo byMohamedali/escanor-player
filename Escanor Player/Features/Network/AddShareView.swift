@@ -20,6 +20,7 @@ struct AddShareView: View {
     @State private var smbFormPresented = false
     @State private var smbDraft = SMBFormData()
     @State private var infoMessage: String?
+    @State private var testResult: String?
 
     private let providers = ProviderKind.allCases
 
@@ -92,24 +93,16 @@ struct AddShareView: View {
             NavigationStack {
                 SMBForm(
                     draft: $smbDraft,
+                    testResult: $testResult,
                     onSave: { draft in
-                        guard !draft.host.isEmpty else {
-                            infoMessage = "Host is required to save SMB share."
-                            return
-                        }
-                        let share = SavedShare(
-                            name: draft.name.isEmpty ? draft.host : draft.name,
-                            kind: .smb(
-                                host: draft.host,
-                                username: draft.username.isEmpty ? nil : draft.username,
-                                password: draft.password.isEmpty ? nil : draft.password
-                            )
-                        )
-                        persistAndDismiss(share)
-                        smbDraft = SMBFormData()
+                        Task { await saveSMB(draft: draft) }
+                    },
+                    onTest: { draft in
+                        Task { await testOnly(draft: draft) }
                     },
                     onCancel: {
                         smbDraft = SMBFormData()
+                        testResult = nil
                         dismiss()
                     }
                 )
@@ -138,7 +131,7 @@ struct AddShareView: View {
     private func handleResolvedSMB(_ service: DiscoveredSMB) {
         smbDraft = SMBFormData(
             name: service.name,
-            host: "\(service.host):\(service.port)",
+            host: "\(service.host)",
             username: "",
             password: ""
         )
@@ -147,6 +140,46 @@ struct AddShareView: View {
 
     private func providers(for category: ProviderCategory) -> [ProviderKind] {
         providers.filter { $0.category == category }
+    }
+
+    private func saveSMB(draft: SMBFormData) async {
+        guard !draft.host.isEmpty else {
+            infoMessage = "Host is required to save SMB share."
+            return
+        }
+
+        let (connected, error) = await testSMBConnection(draft: draft)
+        if connected {
+            let share = SavedShare(
+                name: draft.name.isEmpty ? draft.host : draft.name,
+                kind: .smb(
+                    host: draft.host,
+                    username: draft.username.isEmpty ? nil : draft.username,
+                    password: draft.password.isEmpty ? nil : draft.password
+                )
+            )
+            persistAndDismiss(share)
+            smbDraft = SMBFormData()
+        } else {
+            infoMessage = error ?? "Could not connect to SMB share."
+        }
+    }
+
+    private func testSMBConnection(draft: SMBFormData) async -> (Bool, String?) {
+        let source = SMBSource(host: draft.host, username: draft.username.isEmpty ? nil : draft.username, password: draft.password)
+        do {
+            _ = try await source.list(at: "/")
+            return (true, nil)
+        } catch {
+            return (false, error.localizedDescription)
+        }
+    }
+
+    private func testOnly(draft: SMBFormData) async {
+        let (ok, error) = await testSMBConnection(draft: draft)
+        await MainActor.run {
+            testResult = ok ? "Connection successful" : (error ?? "Connection failed")
+        }
     }
 
     private func persistAndDismiss(_ share: SavedShare) {
@@ -208,7 +241,9 @@ private struct SMBFormData {
 
 private struct SMBForm: View {
     @Binding var draft: SMBFormData
+    @Binding var testResult: String?
     let onSave: (SMBFormData) -> Void
+    let onTest: (SMBFormData) -> Void
     let onCancel: () -> Void
 
     var body: some View {
@@ -225,6 +260,19 @@ private struct SMBForm: View {
                     .autocapitalization(.none)
                 SecureField("Password", text: $draft.password)
                     .textContentType(.password)
+            }
+
+            Section {
+                Button("Test Connection") {
+                    onTest(draft)
+                }
+                .frame(maxWidth: .infinity, alignment: .center)
+                if let testResult {
+                    Text(testResult)
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                        .frame(maxWidth: .infinity, alignment: .center)
+                }
             }
         }
         .navigationTitle("Add SMB")

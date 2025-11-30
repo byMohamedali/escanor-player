@@ -10,7 +10,7 @@ import AMSMB2
 
 class SMBSource: RemoteSource {
     let serverHost: String
-    let share: String
+    var share: String
     let credential: URLCredential
 
     var displayName: String { "SMB \(serverHost)/\(share)" }
@@ -36,6 +36,11 @@ class SMBSource: RemoteSource {
         guard let manager else {
             throw NSError(domain: "SMBSource", code: -1, userInfo: [NSLocalizedDescriptionKey: "Invalid SMB URL"])
         }
+        let shares = try await manager.listShares()
+        guard let firstShare = shares.first else {
+            throw NSError(domain: "SMBSource", code: -1, userInfo: [NSLocalizedDescriptionKey: "No Share availables"])
+        }
+        self.share = firstShare.name
         try await manager.connectShare(name: share)
         return manager
     }
