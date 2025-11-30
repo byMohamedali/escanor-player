@@ -33,8 +33,15 @@ final class MediaScanner: ObservableObject {
 
             for share in shares {
                 guard let kind = share.kind else { continue }
-                if let resolved = resolvedURL(for: kind) {
-                    await scanLocalFolder(url: resolved, share: share)
+                switch kind {
+                case .localFolder(let url, let bookmark):
+                    if let resolved = resolvedURL(for: kind) {
+                        await scanLocalFolder(url: resolved, share: share)
+                    }
+                case .smb(let host, let username, let password):
+                    await scanSMBShare(share: share, host: host, username: username, password: password)
+                default:
+                    continue
                 }
             }
         } catch {
@@ -64,6 +71,41 @@ final class MediaScanner: ObservableObject {
             return url
         default:
             return nil
+        }
+    }
+
+    private func scanSMBShare(share: SavedShareRecord, host: String, username: String?, password: String?) async {
+        let smb = SMBSource(host: host, username: username, password: password)
+        do {
+            let items = try await smb.list(at: "/")
+            let now = Date()
+            for item in items where !item.isDirectory {
+                let key = mediaKey(for: share.id, smbPath: item.path, size: item.size ?? 0, mtime: item.modifiedAt?.timeIntervalSince1970 ?? 0)
+                let guessed = guess(from: URL(fileURLWithPath: item.name))
+                try await insertOrUpdateMediaUsingDraft(
+                    MediaItem(
+                        id: key,
+                        shareId: share.id,
+                        path: item.path,
+                        size: item.size,
+                        mtime: item.modifiedAt?.timeIntervalSince1970,
+                        kind: guessed.kind,
+                        tmdbId: nil,
+                        seriesTmdbId: nil,
+                        episodeTmdbId: nil,
+                        seasonNumber: guessed.season,
+                        episodeNumber: guessed.episode,
+                        titleGuess: guessed.title,
+                        yearGuess: guessed.year,
+                        discoveredAt: now,
+                        lastSeenAt: now
+                    )
+                )
+            }
+        } catch {
+#if DEBUG
+            print("SMB scan failed: \(error)")
+#endif
         }
     }
 
@@ -218,6 +260,13 @@ final class MediaScanner: ObservableObject {
 
         let relativePath = fileURL.path.replacingOccurrences(of: root.path, with: "").trimmingCharacters(in: CharacterSet(charactersIn: "/"))
         let input = "\(shareId.uuidString.lowercased())|\(relativePath.lowercased())|\(size)|\(mtime)"
+        let hash = SHA256.hash(data: Data(input.utf8))
+        return hash.compactMap { String(format: "%02x", $0) }.joined()
+    }
+
+    private func mediaKey(for shareId: UUID, smbPath: String, size: Int, mtime: TimeInterval) -> String {
+        let normalized = smbPath.lowercased()
+        let input = "\(shareId.uuidString.lowercased())|\(normalized)|\(size)|\(mtime)"
         let hash = SHA256.hash(data: Data(input.utf8))
         return hash.compactMap { String(format: "%02x", $0) }.joined()
     }
