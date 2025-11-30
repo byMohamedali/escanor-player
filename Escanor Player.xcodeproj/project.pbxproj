@@ -12,6 +12,7 @@
 		D338E5FF2ECB20D10066C175 /* DefaultsMacros in Frameworks */ = {isa = PBXBuildFile; productRef = D338E5FE2ECB20D10066C175 /* DefaultsMacros */; };
 		D338E60D2ECB36000066C175 /* Metal.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D338E60C2ECB35FF0066C175 /* Metal.framework */; };
 		D338E60F2ECB360C0066C175 /* VideoToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D338E60E2ECB360C0066C175 /* VideoToolbox.framework */; };
+		D36D9E2D2EDAC31000B7D9E0 /* SQLiteData in Frameworks */ = {isa = PBXBuildFile; productRef = D36D9E2C2EDAC31000B7D9E0 /* SQLiteData */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -33,6 +34,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D36D9E2D2EDAC31000B7D9E0 /* SQLiteData in Frameworks */,
 				D338E5FF2ECB20D10066C175 /* DefaultsMacros in Frameworks */,
 				D338E5FD2ECB20D10066C175 /* Defaults in Frameworks */,
 				D338E60F2ECB360C0066C175 /* VideoToolbox.framework in Frameworks */,
@@ -93,6 +95,7 @@
 				D338E4F62ECA20AB0066C175 /* PlayerKit */,
 				D338E5FC2ECB20D10066C175 /* Defaults */,
 				D338E5FE2ECB20D10066C175 /* DefaultsMacros */,
+				D36D9E2C2EDAC31000B7D9E0 /* SQLiteData */,
 			);
 			productName = "Escanor Player";
 			productReference = D338E4E52ECA20680066C175 /* Escanor Player.app */;
@@ -125,6 +128,7 @@
 			packageReferences = (
 				D338E4F52ECA20AB0066C175 /* XCLocalSwiftPackageReference "../PlayerKit" */,
 				D338E5FB2ECB20D10066C175 /* XCRemoteSwiftPackageReference "Defaults" */,
+				D36D9E2B2EDAC31000B7D9E0 /* XCRemoteSwiftPackageReference "sqlite-data" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = D338E4E62ECA20680066C175 /* Products */;
@@ -400,6 +404,14 @@
 				minimumVersion = 9.0.6;
 			};
 		};
+		D36D9E2B2EDAC31000B7D9E0 /* XCRemoteSwiftPackageReference "sqlite-data" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/pointfreeco/sqlite-data";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.3.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -416,6 +428,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = D338E5FB2ECB20D10066C175 /* XCRemoteSwiftPackageReference "Defaults" */;
 			productName = DefaultsMacros;
+		};
+		D36D9E2C2EDAC31000B7D9E0 /* SQLiteData */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D36D9E2B2EDAC31000B7D9E0 /* XCRemoteSwiftPackageReference "sqlite-data" */;
+			productName = SQLiteData;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
