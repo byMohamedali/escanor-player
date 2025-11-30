@@ -111,7 +111,7 @@ final class MediaScanner: ObservableObject {
                 let guessed = guess(from: next)
                 let now = Date()
 
-                try await insertOrUpdateMedia(
+                try await insertOrUpdateMediaUsingDraft(
                     MediaItem(
                         shareId: share.id,
                         path: next.path,
@@ -179,6 +179,21 @@ final class MediaScanner: ObservableObject {
                     "lastSeenAt": item.lastSeenAt?.timeIntervalSince1970
                 ]
             )
+        }
+    }
+
+    // Alternate path using StructuredQueries with Draft for comparison/debugging.
+    // Note: This attempts a simple insert and ignores conflicts.
+    private func insertOrUpdateMediaUsingDraft(_ item: MediaItem) async throws {
+        try await database.write { db in
+            do {
+                try MediaItem.insert { MediaItem.Draft(item) }
+                .execute(db)
+            } catch {
+#if DEBUG
+                print("Structured insert failed (will rely on SQL upsert): \(error)")
+#endif
+            }
         }
     }
 

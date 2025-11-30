@@ -76,7 +76,7 @@ nonisolated struct MediaItem: Identifiable {
 extension MediaItem {
     static func migrate(db: Database) throws {
         try db.create(table: "mediaItems") { t in
-            t.primaryKey("id", .text)
+            t.primaryKey("id", .text).unique()
             t.column("shareId", .text).notNull()
             t.column("path", .text).notNull()
             t.column("mediaKey", .text).notNull().unique()
