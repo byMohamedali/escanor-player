@@ -43,8 +43,10 @@ struct AddShareView: View {
             switch result {
             case .success(let urls):
                 guard let url = urls.first else { return }
+                _ = url.startAccessingSecurityScopedResource()
+                let bookmark = try? url.bookmarkData()
                 persistAndDismiss(
-                    SavedShare(name: url.lastPathComponent, kind: .localFolder(url: url))
+                    SavedShare(name: url.lastPathComponent, kind: .localFolder(url: url, bookmark: bookmark))
                 )
             case .failure(let error):
                 infoMessage = error.localizedDescription

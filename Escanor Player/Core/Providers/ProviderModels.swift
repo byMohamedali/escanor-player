@@ -115,7 +115,7 @@ struct SavedShare: Identifiable, Codable, Equatable {
 }
 
 enum SavedShareKind: Codable, Equatable {
-    case localFolder(url: URL)
+    case localFolder(url: URL, bookmark: Data?)
     case smb(host: String, username: String?, password: String?)
     case ftp(host: String)
     case nfs(host: String)
@@ -141,12 +141,17 @@ enum SavedShareKind: Codable, Equatable {
         let password: String?
     }
 
+    private struct LocalFolderPayload: Codable {
+        let url: URL
+        let bookmarkData: Data?
+    }
+
     func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         switch self {
-        case .localFolder(let url):
+        case .localFolder(let url, let bookmark):
             try container.encode(Kind.localFolder, forKey: .type)
-            try container.encode(url, forKey: .payload)
+            try container.encode(LocalFolderPayload(url: url, bookmarkData: bookmark), forKey: .payload)
         case .smb(let host, let username, let password):
             try container.encode(Kind.smb, forKey: .type)
             try container.encode(SMBPayload(host: host, username: username, password: password), forKey: .payload)
@@ -182,8 +187,13 @@ enum SavedShareKind: Codable, Equatable {
         let type = try container.decode(Kind.self, forKey: .type)
         switch type {
         case .localFolder:
-            let url = try container.decode(URL.self, forKey: .payload)
-            self = .localFolder(url: url)
+            if let payload = try? container.decode(LocalFolderPayload.self, forKey: .payload) {
+                self = .localFolder(url: payload.url, bookmark: payload.bookmarkData)
+            } else {
+                // Backward compatibility: payload was a URL only
+                let url = try container.decode(URL.self, forKey: .payload)
+                self = .localFolder(url: url, bookmark: nil)
+            }
         case .smb:
             let payload = try container.decode(SMBPayload.self, forKey: .payload)
             self = .smb(host: payload.host, username: payload.username, password: payload.password)
@@ -231,7 +241,7 @@ enum SavedShareKind: Codable, Equatable {
 
     var subtitle: String {
         switch self {
-        case .localFolder(let url):
+        case .localFolder(let url, _):
             return url.lastPathComponent
         case .smb(let host, _, _):
             return host
@@ -276,10 +286,12 @@ private let savedShareEncoder = JSONEncoder()
 private let savedShareDecoder = JSONDecoder()
 
 extension SavedShareRecord {
+    var kind: SavedShareKind? {
+        try? savedShareDecoder.decode(SavedShareKind.self, from: kindData)
+    }
+
     func toDomain() -> SavedShare? {
-        guard let kind = try? savedShareDecoder.decode(SavedShareKind.self, from: kindData) else {
-            return nil
-        }
+        guard let kind else { return nil }
         return SavedShare(id: id, name: name, kind: kind, lastAccess: lastAccess)
     }
 

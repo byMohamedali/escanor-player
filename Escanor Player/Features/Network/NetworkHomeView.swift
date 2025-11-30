@@ -13,6 +13,7 @@ struct NetworkHomeView: View {
     @FetchAll(SavedShareRecord.order(by: \.name)) private var shareRecords: [SavedShareRecord]
     @Dependency(\.defaultDatabase) private var database
     @State private var showingAddShare = false
+    @StateObject private var scanner = MediaScanner()
 
     private var shares: [SavedShare] {
         shareRecords.compactMap { $0.toDomain() }
@@ -55,6 +56,9 @@ struct NetworkHomeView: View {
             NavigationStack {
                 AddShareView()
             }
+        }
+        .task {
+            await scanner.scanAllShares()
         }
     }
 
