@@ -34,7 +34,7 @@ final class MediaScanner: ObservableObject {
             for share in shares {
                 guard let kind = share.kind else { continue }
                 switch kind {
-                case .localFolder(let url, let bookmark):
+                case .localFolder:
                     if let resolved = resolvedURL(for: kind) {
                         await scanLocalFolder(url: resolved, share: share)
                     }
@@ -77,7 +77,11 @@ final class MediaScanner: ObservableObject {
     private func scanSMBShare(share: SavedShareRecord, host: String, username: String?, password: String?) async {
         let smb = SMBSource(host: host, username: username, password: password)
         do {
-            try await scanSMBPath(smb: smb, share: share, path: "/", depth: 0)
+            let roots = share.toDomain()?.includePaths ?? []
+            let targets = roots.isEmpty ? ["/"] : roots
+            for root in targets {
+                try await scanSMBPath(smb: smb, share: share, path: root, depth: 0)
+            }
         } catch {
 #if DEBUG
             print("SMB scan failed: \(error)")

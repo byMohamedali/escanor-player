@@ -9,11 +9,20 @@ import SwiftUI
 import SQLiteData
 import Dependencies
 
+
+extension String: @retroactive Identifiable {
+    public var id: String {
+        self
+    }
+}
+
 struct NetworkHomeView: View {
     @FetchAll(SavedShareRecord.order(by: \.name)) private var shareRecords: [SavedShareRecord]
     @Dependency(\.defaultDatabase) private var database
     @EnvironmentObject private var scanner: MediaScanner
     @State private var showingAddShare = false
+    @State private var selectedShare: SavedShare?
+    @State private var browserPath: String?
 
     private var shares: [SavedShare] {
         shareRecords.compactMap { $0.toDomain() }
@@ -65,14 +74,23 @@ struct NetworkHomeView: View {
                 }
             }
         }
-        .sheet(isPresented: $showingAddShare) {
-            NavigationStack {
-                AddShareView()
+            .sheet(isPresented: $showingAddShare) {
+                NavigationStack {
+                    AddShareView()
+                }
             }
-        }
-        .task {
-            await scanner.scanAllShares()
-        }
+            .sheet(item: $browserPath) { path in
+                if let share = selectedShare, let source = buildSource(from: share) {
+                    NavigationStack {
+                        SourceBrowserView(source: source, startPath: path) { next in
+                            browserPath = next
+                        }
+                    }
+                }
+            }
+            .task {
+                await scanner.scanAllShares()
+            }
     }
 
     private func delete(at indices: IndexSet) {
@@ -109,6 +127,21 @@ struct NetworkHomeView: View {
                 .foregroundStyle(.primary)
         }
         .contentShape(Rectangle())
+        .onTapGesture {
+            selectedShare = share
+            browserPath = "/"
+        }
+    }
+
+    private func buildSource(from share: SavedShare) -> RemoteSource? {
+        switch share.kind {
+        case .localFolder(let url, _):
+            return LocalSource(root: url)
+        case .smb(let host, let username, let password):
+            return SMBSource(host: host, username: username, password: password)
+        default:
+            return nil
+        }
     }
 }
 

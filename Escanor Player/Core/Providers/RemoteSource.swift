@@ -7,7 +7,8 @@
 
 import Foundation
 
-struct RemoteItem {
+struct RemoteItem: Identifiable {
+    let id: UUID = UUID()
     let path: String
     let name: String
     let isDirectory: Bool

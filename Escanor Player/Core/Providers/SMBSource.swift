@@ -37,7 +37,7 @@ class SMBSource: RemoteSource {
             throw NSError(domain: "SMBSource", code: -1, userInfo: [NSLocalizedDescriptionKey: "Invalid SMB URL"])
         }
         let shares = try await manager.listShares()
-        guard let firstShare = shares.first else {
+        guard let firstShare = shares.last else {
             throw NSError(domain: "SMBSource", code: -1, userInfo: [NSLocalizedDescriptionKey: "No Share availables"])
         }
         self.share = firstShare.name

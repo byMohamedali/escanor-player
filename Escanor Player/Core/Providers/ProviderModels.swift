@@ -105,12 +105,14 @@ struct SavedShare: Identifiable, Codable, Equatable {
     var name: String
     var kind: SavedShareKind
     var lastAccess: Date?
+    var includePaths: [String]?
 
-    init(id: UUID = UUID(), name: String, kind: SavedShareKind, lastAccess: Date? = nil) {
+    init(id: UUID = UUID(), name: String, kind: SavedShareKind, lastAccess: Date? = nil, includePaths: [String]? = nil) {
         self.id = id
         self.name = name
         self.kind = kind
         self.lastAccess = lastAccess
+        self.includePaths = includePaths
     }
 }
 
@@ -270,15 +272,19 @@ nonisolated struct SavedShareRecord: Identifiable {
 
     let id: UUID
     var name: String
-    var kindData: Data
+    var kindData: Data?
     var lastAccess: Date?
+    var includePathsData: Data?
 
-    init?(id: UUID = UUID(), name: String, kind: SavedShareKind, lastAccess: Date? = nil) {
-        guard let data = try? savedShareEncoder.encode(kind) else { return nil }
+    init?(id: UUID = UUID(), name: String, kind: SavedShareKind, lastAccess: Date? = nil, includePaths: [String]? = nil) {
+        let data = try? savedShareEncoder.encode(kind)
         self.id = id
         self.name = name
         self.kindData = data
         self.lastAccess = lastAccess
+        if let includePaths {
+            self.includePathsData = try? JSONEncoder().encode(includePaths)
+        }
     }
 }
 
@@ -287,12 +293,14 @@ private let savedShareDecoder = JSONDecoder()
 
 extension SavedShareRecord {
     var kind: SavedShareKind? {
-        try? savedShareDecoder.decode(SavedShareKind.self, from: kindData)
+        guard let kindData else { return nil }
+        return try? savedShareDecoder.decode(SavedShareKind.self, from: kindData)
     }
 
     func toDomain() -> SavedShare? {
         guard let kind else { return nil }
-        return SavedShare(id: id, name: name, kind: kind, lastAccess: lastAccess)
+        let paths = includePathsData.flatMap { try? JSONDecoder().decode([String].self, from: $0) }
+        return SavedShare(id: id, name: name, kind: kind, lastAccess: lastAccess, includePaths: paths)
     }
 
     static func draft(from share: SavedShare) throws -> Draft {
@@ -301,21 +309,23 @@ extension SavedShareRecord {
             id: share.id,
             name: share.name,
             kindData: data,
-            lastAccess: share.lastAccess
+            lastAccess: share.lastAccess,
+            includePathsData: share.includePaths != nil ? try? JSONEncoder().encode(share.includePaths) : nil
         )
     }
 
     static func migrate(db: Database) throws {
-        try #sql(
-            """
-            CREATE TABLE "savedShareRecords" (
-                "id" TEXT PRIMARY KEY NOT NULL ON CONFLICT REPLACE DEFAULT (uuid()),
-                "name" TEXT NOT NULL ON CONFLICT REPLACE DEFAULT '',
-                "kindData" BLOB NOT NULL,
-                "lastAccess" REAL
-            ) STRICT
-            """
-        )
-        .execute(db)
+            try #sql(
+                """
+                CREATE TABLE "savedShareRecords" (
+                    "id" TEXT PRIMARY KEY NOT NULL ON CONFLICT REPLACE DEFAULT (uuid()),
+                    "name" TEXT NOT NULL ON CONFLICT REPLACE DEFAULT '',
+                    "kindData" BLOB,
+                    "lastAccess" REAL,
+                    "includePathsData" BLOB
+                ) STRICT
+                """
+            )
+            .execute(db)
     }
 }

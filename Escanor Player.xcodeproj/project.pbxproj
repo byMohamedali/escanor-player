@@ -15,6 +15,7 @@
 		D36D9E2D2EDAC31000B7D9E0 /* SQLiteData in Frameworks */ = {isa = PBXBuildFile; productRef = D36D9E2C2EDAC31000B7D9E0 /* SQLiteData */; };
 		D36DA0862EDC8F0A00B7D9E0 /* AMSMB2 in Frameworks */ = {isa = PBXBuildFile; productRef = D36DA0852EDC8F0A00B7D9E0 /* AMSMB2 */; };
 		D36DA0872EDC8F0A00B7D9E0 /* AMSMB2 in Embed Frameworks */ = {isa = PBXBuildFile; productRef = D36DA0852EDC8F0A00B7D9E0 /* AMSMB2 */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		D36DA0902EDCB74000B7D9E0 /* WebDavKit in Frameworks */ = {isa = PBXBuildFile; productRef = D36DA08F2EDCB74000B7D9E0 /* WebDavKit */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -52,6 +53,7 @@
 			files = (
 				D36D9E2D2EDAC31000B7D9E0 /* SQLiteData in Frameworks */,
 				D338E5FF2ECB20D10066C175 /* DefaultsMacros in Frameworks */,
+				D36DA0902EDCB74000B7D9E0 /* WebDavKit in Frameworks */,
 				D338E5FD2ECB20D10066C175 /* Defaults in Frameworks */,
 				D338E60F2ECB360C0066C175 /* VideoToolbox.framework in Frameworks */,
 				D338E60D2ECB36000066C175 /* Metal.framework in Frameworks */,
@@ -115,6 +117,7 @@
 				D338E5FE2ECB20D10066C175 /* DefaultsMacros */,
 				D36D9E2C2EDAC31000B7D9E0 /* SQLiteData */,
 				D36DA0852EDC8F0A00B7D9E0 /* AMSMB2 */,
+				D36DA08F2EDCB74000B7D9E0 /* WebDavKit */,
 			);
 			productName = "Escanor Player";
 			productReference = D338E4E52ECA20680066C175 /* Escanor Player.app */;
@@ -149,6 +152,7 @@
 				D338E5FB2ECB20D10066C175 /* XCRemoteSwiftPackageReference "Defaults" */,
 				D36D9E2B2EDAC31000B7D9E0 /* XCRemoteSwiftPackageReference "sqlite-data" */,
 				D36DA0712EDC840D00B7D9E0 /* XCRemoteSwiftPackageReference "AMSMB2" */,
+				D36DA08E2EDCB74000B7D9E0 /* XCRemoteSwiftPackageReference "WebDAVKitSwift" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = D338E4E62ECA20680066C175 /* Products */;
@@ -442,6 +446,14 @@
 				minimumVersion = 4.0.3;
 			};
 		};
+		D36DA08E2EDCB74000B7D9E0 /* XCRemoteSwiftPackageReference "WebDAVKitSwift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/fanjiashu/WebDAVKitSwift";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.59.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -468,6 +480,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = D36DA0712EDC840D00B7D9E0 /* XCRemoteSwiftPackageReference "AMSMB2" */;
 			productName = AMSMB2;
+		};
+		D36DA08F2EDCB74000B7D9E0 /* WebDavKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D36DA08E2EDCB74000B7D9E0 /* XCRemoteSwiftPackageReference "WebDAVKitSwift" */;
+			productName = WebDavKit;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
