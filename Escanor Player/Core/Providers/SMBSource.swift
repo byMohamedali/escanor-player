@@ -12,6 +12,7 @@ class SMBSource: RemoteSource {
     let serverHost: String
     var share: String
     let credential: URLCredential
+    let filter: ItemFilter
 
     var displayName: String { "SMB \(serverHost)/\(share)" }
 
@@ -20,7 +21,7 @@ class SMBSource: RemoteSource {
         return SMB2Manager(url: url, credential: credential)
     }()
 
-    init(host: String, username: String?, password: String?) {
+    init(host: String, username: String?, password: String?, filter: ItemFilter = .videoAndDirectories) {
         let parts = host.split(separator: "/", maxSplits: 1, omittingEmptySubsequences: true)
         if parts.count == 2 {
             self.serverHost = String(parts[0])
@@ -30,6 +31,7 @@ class SMBSource: RemoteSource {
             self.share = "share"
         }
         self.credential = URLCredential(user: username ?? "guest", password: password ?? "", persistence: .forSession)
+        self.filter = filter
     }
 
     private func connect() async throws -> SMB2Manager {
@@ -58,20 +60,28 @@ class SMBSource: RemoteSource {
 
             let size = entry[.fileSizeKey] as? Int64
             let modified = entry[.contentModificationDateKey] as? Date
-            return RemoteItem(
+            let item = RemoteItem(
                 path: path,
                 name: name,
                 isDirectory: type == .directory,
                 size: size != nil ? Int(size!) : nil,
                 modifiedAt: modified
             )
+            return filter.allows(item: item) ? item : nil
         }
     }
 
-    func openFile(at path: String) async throws -> URL {
-        let client = try await connect()
-        let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
-//        try await client.copyItem(atPath: path)
-        return URL(string: path)!
+    func openFile(at path: String) async throws -> String {
+        let baseURL = manager!.url.appendingPathComponent(share).appendingPathComponent(path)
+        guard let user = credential.user,
+              let password = credential.password else {
+            return baseURL.absoluteString
+        }
+
+        var components = URLComponents(url: baseURL, resolvingAgainstBaseURL: false)
+        components?.user = user
+        components?.password = password
+        let url = components?.url ?? baseURL
+        return url.absoluteString
     }
 }

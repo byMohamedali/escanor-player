@@ -21,15 +21,14 @@ struct NetworkHomeView: View {
     @Dependency(\.defaultDatabase) private var database
     @EnvironmentObject private var scanner: MediaScanner
     @State private var showingAddShare = false
-    @State private var selectedShare: SavedShare?
-    @State private var browserPath: String?
+    @State private var browsePath: [BrowseDestination] = []
 
     private var shares: [SavedShare] {
         shareRecords.compactMap { $0.toDomain() }
     }
 
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $browsePath) {
             List {
                 Section("Saved Shares") {
                     if shares.isEmpty {
@@ -40,7 +39,7 @@ struct NetworkHomeView: View {
                                 .font(.subheadline)
                                 .foregroundStyle(.secondary)
                         }
-                        .padding(.vertical, 8)
+                            .padding(.vertical, 8)
                     } else {
                         ForEach(shares) { share in
                             shareRow(share)
@@ -73,19 +72,20 @@ struct NetworkHomeView: View {
                     }
                 }
             }
+            .navigationDestination(for: BrowseDestination.self) { destination in
+                if let source = buildSource(from: destination.share) {
+                    SourceBrowserView(source: source, startPath: destination.path) { next in
+                        browsePath.append(.init(share: destination.share, path: next))
+                    }
+                } else {
+                    Text("Unsupported source")
+                }
+            }
+
         }
             .sheet(isPresented: $showingAddShare) {
                 NavigationStack {
                     AddShareView()
-                }
-            }
-            .sheet(item: $browserPath) { path in
-                if let share = selectedShare, let source = buildSource(from: share) {
-                    NavigationStack {
-                        SourceBrowserView(source: source, startPath: path) { next in
-                            browserPath = next
-                        }
-                    }
                 }
             }
             .task {
@@ -110,33 +110,27 @@ struct NetworkHomeView: View {
 
     private func shareRow(_ share: SavedShare) -> some View {
         let provider = share.kind.providerKind
-        return HStack(spacing: 12) {
-            Image(systemName: provider.systemImage)
-                .foregroundStyle(.tint)
-                .frame(width: 28)
-            VStack(alignment: .leading, spacing: 4) {
-                Text(share.name)
-                    .font(.headline)
-                Text(share.kind.subtitle)
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
+        return NavigationLink(value: BrowseDestination(share: share, path: "/")) {
+            HStack(spacing: 12) {
+                Image(systemName: provider.systemImage)
+                    .foregroundStyle(.tint)
+                    .frame(width: 28)
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(share.name)
+                        .font(.headline)
+                    Text(share.kind.subtitle)
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
             }
-            Spacer()
-            Image(systemName: "chevron.right")
-                .font(.caption)
-                .foregroundStyle(.primary)
-        }
-        .contentShape(Rectangle())
-        .onTapGesture {
-            selectedShare = share
-            browserPath = "/"
+            .contentShape(Rectangle())
         }
     }
 
     private func buildSource(from share: SavedShare) -> RemoteSource? {
         switch share.kind {
-        case .localFolder(let url, _):
-            return LocalSource(root: url)
+        case .localFolder(let url, let bookmark):
+            return LocalSource(root: url, bookmarkData: bookmark)
         case .smb(let host, let username, let password):
             return SMBSource(host: host, username: username, password: password)
         default:
@@ -147,4 +141,18 @@ struct NetworkHomeView: View {
 
 #Preview {
     NetworkHomeView()
+}
+
+private struct BrowseDestination: Hashable {
+    let share: SavedShare
+    let path: String
+
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(share.id)
+        hasher.combine(path)
+    }
+
+    static func == (lhs: BrowseDestination, rhs: BrowseDestination) -> Bool {
+        lhs.share.id == rhs.share.id && lhs.path == rhs.path
+    }
 }

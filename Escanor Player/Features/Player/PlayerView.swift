@@ -44,7 +44,11 @@ struct PlayerView: View {
             }
         }
         .task {
-            controller.playLocalFile(at: URL(fileURLWithPath: mediaItem.path))
+            if mediaItem.path.first == "/" {
+                controller.playLocalFile(at: URL(fileURLWithPath: mediaItem.path))
+            } else {
+                controller.playLocalFile(at: URL(string: mediaItem.path) ?? URL(fileURLWithPath: mediaItem.path))
+            }
         }
     }
 

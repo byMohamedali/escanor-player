@@ -114,22 +114,6 @@ struct SplashScreenView: View {
                     .animation(.snappy(duration: 1.4).repeatForever(autoreverses: true), value: emblemBounce)
                     .accessibilityHidden(true)
             }
-            .overlay(alignment: .bottomTrailing) {
-                Capsule(style: .continuous)
-                    .fill(Color.escanorGold.opacity(0.25))
-                    .overlay(
-                        Capsule(style: .continuous)
-                            .stroke(.white.opacity(0.35), lineWidth: 0.5)
-                    )
-                    .frame(width: 86, height: 32)
-                    .overlay(
-                        Label("Plus", systemImage: "sparkles")
-                            .font(.system(.caption, design: .rounded).weight(.medium))
-                            .foregroundStyle(.white)
-                            .labelStyle(.titleAndIcon)
-                    )
-                    .offset(x: -18, y: -18)
-            }
             .accessibilityHidden(true)
     }
 

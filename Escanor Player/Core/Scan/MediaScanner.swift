@@ -39,7 +39,8 @@ final class MediaScanner: ObservableObject {
                         await scanLocalFolder(url: resolved, share: share)
                     }
                 case .smb(let host, let username, let password):
-                    await scanSMBShare(share: share, host: host, username: username, password: password)
+//                    await scanSMBShare(share: share, host: host, username: username, password: password)
+                    continue
                 default:
                     continue
                 }

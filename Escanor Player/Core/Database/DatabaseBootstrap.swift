@@ -40,14 +40,15 @@ extension DependencyValues {
 
         try migrator.migrate(database)
         defaultDatabase = database
-        defaultSyncEngine = try SyncEngine(
-            for: database,
-            tables: SavedShareRecord.self,
-            PlaybackState.self,
-            MediaCollection.self,
-            MediaCollectionMembership.self,
-            UserFlags.self
-        )
+//        defaultSyncEngine = try SyncEngine(
+//            for: database,
+//            tables: 
+////                SavedShareRecord.self,
+////            PlaybackState.self,
+////            MediaCollection.self,
+////            MediaCollectionMembership.self,
+////            UserFlags.self
+//        )
 
         logger.debug("Database ready at \(database.path)")
     }

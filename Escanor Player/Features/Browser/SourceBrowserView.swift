@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import Foundation
 
 struct SourceBrowserView: View {
     let source: RemoteSource
@@ -18,7 +19,7 @@ struct SourceBrowserView: View {
     @State private var selectedMediaItem: MediaItem?
     @State private var selectedItem: RemoteItem?
 
-    private let videoExtensions: Set<String> = ["mp4", "m4v", "mkv", "mov", "avi", "wmv", "flv", "mpg", "mpeg", "ts", "m2ts"]
+    private let videoExtensions: Set<String> = ItemFilter.videoExtensions
 
     var body: some View {
         List {
@@ -96,12 +97,12 @@ struct SourceBrowserView: View {
         } else if isVideo(item) {
             Task {
                 do {
-                    let url = try await source.openFile(at: item.path)
+                    let urlString = try await source.openFile(at: item.path)
                     await MainActor.run {
                         selectedMediaItem = MediaItem(
                             id: item.id.uuidString,
                             shareId: UUID(),
-                            path: url.path,
+                            path: urlString,
                             size: item.size,
                             mtime: nil,
                             kind: .movie,
@@ -110,7 +111,7 @@ struct SourceBrowserView: View {
                             episodeTmdbId: nil,
                             seasonNumber: nil,
                             episodeNumber: nil,
-                            titleGuess: url.lastPathComponent,
+                            titleGuess: URL(string: urlString)?.lastPathComponent,
                             yearGuess: nil,
                             discoveredAt: nil,
                             lastSeenAt: nil

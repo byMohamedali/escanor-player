@@ -315,17 +315,12 @@ extension SavedShareRecord {
     }
 
     static func migrate(db: Database) throws {
-            try #sql(
-                """
-                CREATE TABLE "savedShareRecords" (
-                    "id" TEXT PRIMARY KEY NOT NULL ON CONFLICT REPLACE DEFAULT (uuid()),
-                    "name" TEXT NOT NULL ON CONFLICT REPLACE DEFAULT '',
-                    "kindData" BLOB,
-                    "lastAccess" REAL,
-                    "includePathsData" BLOB
-                ) STRICT
-                """
-            )
-            .execute(db)
+        try db.create(table: "savedShareRecords") { t in
+            t.primaryKey("id", .text)
+            t.column("name", .text)
+            t.column("kindData", .blob)
+            t.column("lastAccess", .double)
+            t.column("includePathsData", .blob)
+        }
     }
 }

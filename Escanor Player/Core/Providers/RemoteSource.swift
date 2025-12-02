@@ -19,6 +19,6 @@ struct RemoteItem: Identifiable {
 protocol RemoteSource {
     var displayName: String { get }
     func list(at path: String) async throws -> [RemoteItem]
-    func openFile(at path: String) async throws -> URL
+    func openFile(at path: String) async throws -> String
 }
 
