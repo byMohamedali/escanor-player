@@ -3,4 +3,22 @@
    uuid = "1FB260B3-CB90-40D6-B768-3782E3EBFE78"
    type = "1"
    version = "2.0">
+   <Breakpoints>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "0EC978B7-5618-43B4-AF67-94EA1FE80A94"
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "../../Library/Developer/Xcode/DerivedData/Escanor_Player-cuazscogwdgowyfsqrntmqyqbnnu/SourcePackages/checkouts/WebDAVKitSwift/Sources/WebDavKit/WebDAV.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "176"
+            endingLineNumber = "176"
+            landmarkName = "listFiles(atPath:foldersFirst:includeSelf:)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+   </Breakpoints>
 </Bucket>

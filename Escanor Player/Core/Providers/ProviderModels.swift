@@ -90,7 +90,7 @@ enum ProviderKind: String, CaseIterable, Identifiable, Codable {
 
     var isImplementedInMVP: Bool {
         switch self {
-        case .localFolder, .smb:
+        case .localFolder, .smb, .ftp, .webdav:
             return true
         default:
             return false
@@ -119,9 +119,9 @@ struct SavedShare: Identifiable, Codable, Equatable {
 enum SavedShareKind: Codable, Equatable {
     case localFolder(url: URL, bookmark: Data?)
     case smb(host: String, username: String?, password: String?)
-    case ftp(host: String)
+    case ftp(host: String, port: Int?, username: String?, password: String?, passive: Bool?)
     case nfs(host: String)
-    case webdav(url: URL)
+    case webdav(url: URL, username: String?, password: String?)
     case googleDrive(accountID: String)
     case dropbox(accountID: String)
     case oneDrive(accountID: String)
@@ -143,9 +143,23 @@ enum SavedShareKind: Codable, Equatable {
         let password: String?
     }
 
+    private struct FTPPayload: Codable {
+        let host: String
+        let port: Int?
+        let username: String?
+        let password: String?
+        let passive: Bool?
+    }
+
     private struct LocalFolderPayload: Codable {
         let url: URL
         let bookmarkData: Data?
+    }
+    
+    private struct WebDAVPayload: Codable {
+        let url: URL
+        let username: String?
+        let password: String?
     }
 
     func encode(to encoder: Encoder) throws {
@@ -157,15 +171,15 @@ enum SavedShareKind: Codable, Equatable {
         case .smb(let host, let username, let password):
             try container.encode(Kind.smb, forKey: .type)
             try container.encode(SMBPayload(host: host, username: username, password: password), forKey: .payload)
-        case .ftp(let host):
+        case .ftp(let host, let port, let username, let password, let passive):
             try container.encode(Kind.ftp, forKey: .type)
-            try container.encode(host, forKey: .payload)
+            try container.encode(FTPPayload(host: host, port: port, username: username, password: password, passive: passive), forKey: .payload)
         case .nfs(let host):
             try container.encode(Kind.nfs, forKey: .type)
             try container.encode(host, forKey: .payload)
-        case .webdav(let url):
+        case .webdav(let url, let username, let password):
             try container.encode(Kind.webdav, forKey: .type)
-            try container.encode(url, forKey: .payload)
+            try container.encode(WebDAVPayload(url: url, username: username, password: password), forKey: .payload)
         case .googleDrive(let accountID):
             try container.encode(Kind.googleDrive, forKey: .type)
             try container.encode(accountID, forKey: .payload)
@@ -200,14 +214,23 @@ enum SavedShareKind: Codable, Equatable {
             let payload = try container.decode(SMBPayload.self, forKey: .payload)
             self = .smb(host: payload.host, username: payload.username, password: payload.password)
         case .ftp:
-            let host = try container.decode(String.self, forKey: .payload)
-            self = .ftp(host: host)
+            if let payload = try? container.decode(FTPPayload.self, forKey: .payload) {
+                self = .ftp(host: payload.host, port: payload.port, username: payload.username, password: payload.password, passive: payload.passive)
+            } else {
+                let host = try container.decode(String.self, forKey: .payload)
+                self = .ftp(host: host, port: nil, username: nil, password: nil, passive: nil)
+            }
         case .nfs:
             let host = try container.decode(String.self, forKey: .payload)
             self = .nfs(host: host)
         case .webdav:
-            let url = try container.decode(URL.self, forKey: .payload)
-            self = .webdav(url: url)
+            if let payload = try? container.decode(WebDAVPayload.self, forKey: .payload) {
+                self = .webdav(url: payload.url, username: payload.username, password: payload.password)
+            } else {
+                // Backward compatibility: payload was a URL only
+                let url = try container.decode(URL.self, forKey: .payload)
+                self = .webdav(url: url, username: nil, password: nil)
+            }
         case .googleDrive:
             let accountID = try container.decode(String.self, forKey: .payload)
             self = .googleDrive(accountID: accountID)
@@ -247,11 +270,14 @@ enum SavedShareKind: Codable, Equatable {
             return url.lastPathComponent
         case .smb(let host, _, _):
             return host
-        case .ftp(let host):
+        case .ftp(let host, let port, _, _, _):
+            if let port, port != 21 {
+                return "\(host):\(port)"
+            }
             return host
         case .nfs(let host):
             return host
-        case .webdav(let url):
+        case .webdav(let url, _, _):
             return url.host ?? url.absoluteString
         case .googleDrive(let accountID),
              .dropbox(let accountID),

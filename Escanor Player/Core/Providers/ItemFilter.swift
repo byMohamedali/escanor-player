@@ -31,7 +31,7 @@ struct ItemFilter {
         allows(name: item.name, isDirectory: item.isDirectory)
     }
 
-    private func allows(name: String, isDirectory: Bool) -> Bool {
+    func allows(name: String, isDirectory: Bool) -> Bool {
         if !includeHidden && name.hasPrefix(".") {
             return false
         }

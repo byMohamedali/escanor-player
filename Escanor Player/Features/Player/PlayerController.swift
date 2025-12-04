@@ -21,6 +21,7 @@ final class PlayerController: ObservableObject {
     @Published private(set) var isPlaying = false
     @Published private(set) var currentTime: TimeInterval = .zero
     @Published private(set) var duration: TimeInterval = .zero
+    @Published private(set) var isBuffering = false
 
     let player: EscanorPlayer?
     private var cancellables = Set<AnyCancellable>()
@@ -41,11 +42,13 @@ final class PlayerController: ObservableObject {
 
     func loadDemoIfNeeded() {
         guard !hasLoadedSource, let url = Self.demoURL else { return }
+        isBuffering = true
         player?.play(with: url)
         hasLoadedSource = true
     }
 
     func playLocalFile(at url: URL) {
+        isBuffering = true
         player?.play(with: url)
         hasLoadedSource = true
     }
@@ -71,21 +74,18 @@ final class PlayerController: ObservableObject {
                 guard let self else { return }
                 switch event {
                 case .started(_):
+                    self.isBuffering = false
                     self.isPlaying = true
                 case .ready:
+                    self.isBuffering = false
                     self.duration = self.player?.duration ?? self.duration
                 case .paused:
                     self.isPlaying = false
                 case .resumed:
-                    self.isPlaying = true
-                    self.isPlaying = true
-                case .ready:
-                    self.duration = self.player?.duration ?? self.duration
-                case .paused:
-                    self.isPlaying = false
-                case .resumed:
+                    self.isBuffering = false
                     self.isPlaying = true
                 case .completed:
+                    self.isBuffering = false
                     self.isPlaying = false
                     self.currentTime = self.duration
                 case .timeUpdated(let time):
@@ -93,10 +93,12 @@ final class PlayerController: ObservableObject {
                 case .durationUpdated(let duration):
                     self.duration = duration
                 case .buffering(_):
-                    break
+                    self.isBuffering = true
                 case .stopped:
+                    self.isBuffering = false
                     self.isPlaying = false
                 case .error(_):
+                    self.isBuffering = false
                     self.isPlaying = false
                 }
             }

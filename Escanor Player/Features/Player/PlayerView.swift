@@ -27,6 +27,16 @@ struct PlayerView: View {
                         showControls.toggle()
                     }
                 }
+            if controller.isBuffering {
+                ZStack {
+                    Color.black.opacity(0.35).ignoresSafeArea()
+                    ProgressView("Loading…")
+                        .progressViewStyle(.circular)
+                        .tint(.white)
+                        .foregroundStyle(.white)
+                }
+                .transition(.opacity)
+            }
             if showControls {
                 ControlsOverlay(
                     isPlaying: controller.isPlaying,
@@ -43,6 +53,7 @@ struct PlayerView: View {
                 .transition(.opacity)
             }
         }
+        .colorScheme(.dark)
         .task {
             if mediaItem.path.first == "/" {
                 controller.playLocalFile(at: URL(fileURLWithPath: mediaItem.path))

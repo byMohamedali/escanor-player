@@ -18,7 +18,11 @@ struct AddShareView: View {
 
     @State private var showingFolderPicker = false
     @State private var smbFormPresented = false
+    @State private var ftpFormPresented = false
+    @State private var webDAVFormPresented = false
     @State private var smbDraft = SMBFormData()
+    @State private var ftpDraft = FTPFormData()
+    @State private var webDAVDraft = WebDAVFormData()
     @State private var infoMessage: String?
     @State private var testResult: String?
 
@@ -28,12 +32,12 @@ struct AddShareView: View {
         List {
             if !bonjourDiscovery.services.isEmpty || bonjourDiscovery.isSearching {
                 Section("Available Shares") {
-                    if bonjourDiscovery.isSearching {
-                        HStack {
-                            ProgressView()
-                            Text("Searching...")
-                        }
-                    }
+//                    if bonjourDiscovery.isSearching {
+//                        HStack {
+//                            ProgressView()
+//                            Text("Searching...")
+//                        }
+//                    }
                     ForEach(bonjourDiscovery.services) { service in
                         Button {
                             handleResolvedSMB(service)
@@ -108,6 +112,44 @@ struct AddShareView: View {
                 )
             }
         }
+        .sheet(isPresented: $ftpFormPresented) {
+            NavigationStack {
+                FTPForm(
+                    draft: $ftpDraft,
+                    testResult: $testResult,
+                    onSave: { draft in
+                        Task { await saveFTP(draft: draft) }
+                    },
+                    onTest: { draft in
+                        Task { await testFTP(draft: draft) }
+                    },
+                    onCancel: {
+                        ftpDraft = FTPFormData()
+                        testResult = nil
+                        dismiss()
+                    }
+                )
+            }
+        }
+        .sheet(isPresented: $webDAVFormPresented) {
+            NavigationStack {
+                WebDAVForm(
+                    draft: $webDAVDraft,
+                    testResult: $testResult,
+                    onSave: { draft in
+                        Task { await saveWebDAV(draft: draft) }
+                    },
+                    onTest: { draft in
+                        Task { await testWebDAV(draft: draft) }
+                    },
+                    onCancel: {
+                        webDAVDraft = WebDAVFormData()
+                        testResult = nil
+                        dismiss()
+                    }
+                )
+            }
+        }
         .alert("Notice", isPresented: Binding(get: { infoMessage != nil }, set: { newValue in
             if !newValue { infoMessage = nil }
         })) {
@@ -123,6 +165,10 @@ struct AddShareView: View {
             showingFolderPicker = true
         case .smb:
             smbFormPresented = true
+        case .ftp:
+            ftpFormPresented = true
+        case .webdav:
+            webDAVFormPresented = true
         default:
             infoMessage = "\(provider.displayName) is planned for later."
         }
@@ -165,6 +211,54 @@ struct AddShareView: View {
         }
     }
 
+    private func saveFTP(draft: FTPFormData) async {
+        guard !draft.host.isEmpty else {
+            infoMessage = "Host is required to save FTP share."
+            return
+        }
+
+        let (connected, error) = await testFTPConnection(draft: draft)
+        if connected {
+            let share = SavedShare(
+                name: draft.name.isEmpty ? draft.host : draft.name,
+                kind: .ftp(
+                    host: draft.host,
+                    port: draft.portNumber,
+                    username: draft.username.isEmpty ? nil : draft.username,
+                    password: draft.password.isEmpty ? nil : draft.password,
+                    passive: draft.passive
+                )
+            )
+            persistAndDismiss(share)
+            ftpDraft = FTPFormData()
+        } else {
+            infoMessage = error ?? "Could not connect to FTP server."
+        }
+    }
+
+    private func testFTP(draft: FTPFormData) async {
+        let (ok, error) = await testFTPConnection(draft: draft)
+        await MainActor.run {
+            testResult = ok ? "Connection successful" : (error ?? "Connection failed")
+        }
+    }
+
+    private func testFTPConnection(draft: FTPFormData) async -> (Bool, String?) {
+        let source = FTPSource(
+            host: draft.host,
+            port: draft.portNumber,
+            username: draft.username.isEmpty ? nil : draft.username,
+            password: draft.password.isEmpty ? nil : draft.password,
+            passive: draft.passive
+        )
+        do {
+            _ = try await source.list(at: "/")
+            return (true, nil)
+        } catch {
+            return (false, error.localizedDescription)
+        }
+    }
+
     private func testSMBConnection(draft: SMBFormData) async -> (Bool, String?) {
         let source = SMBSource(host: draft.host, username: draft.username.isEmpty ? nil : draft.username, password: draft.password)
         do {
@@ -179,6 +273,50 @@ struct AddShareView: View {
         let (ok, error) = await testSMBConnection(draft: draft)
         await MainActor.run {
             testResult = ok ? "Connection successful" : (error ?? "Connection failed")
+        }
+    }
+
+    private func testWebDAV(draft: WebDAVFormData) async {
+        let (ok, error) = await testWebDAVConnection(draft: draft)
+        await MainActor.run {
+            testResult = ok ? "Connection successful" : (error ?? "Connection failed")
+        }
+    }
+
+    private func testWebDAVConnection(draft: WebDAVFormData) async -> (Bool, String?) {
+        guard let url = URL(string: draft.url) else {
+            return (false, "Invalid URL")
+        }
+        guard let source = WebDAVSource(url: url, username: draft.username.isEmpty ? nil : draft.username, password: draft.password.isEmpty ? nil : draft.password) else {
+            return (false, "Invalid server configuration")
+        }
+        do {
+            _ = try await source.list(at: "/")
+            return (true, nil)
+        } catch {
+            return (false, error.localizedDescription)
+        }
+    }
+
+    private func saveWebDAV(draft: WebDAVFormData) async {
+        guard let url = URL(string: draft.url) else {
+            infoMessage = "Invalid URL"
+            return
+        }
+        let (connected, error) = await testWebDAVConnection(draft: draft)
+        if connected {
+            let share = SavedShare(
+                name: draft.name.isEmpty ? (url.host ?? "WebDAV") : draft.name,
+                kind: .webdav(
+                    url: url,
+                    username: draft.username.isEmpty ? nil : draft.username,
+                    password: draft.password.isEmpty ? nil : draft.password
+                )
+            )
+            persistAndDismiss(share)
+            webDAVDraft = WebDAVFormData()
+        } else {
+            infoMessage = error ?? "Could not connect to WebDAV server."
         }
     }
 

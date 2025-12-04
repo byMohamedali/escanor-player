@@ -35,7 +35,7 @@ struct NetworkHomeView: View {
                         VStack(alignment: .leading, spacing: 8) {
                             Text("No shares yet")
                                 .font(.headline)
-                            Text("Add a local folder or SMB server to get started.")
+                            Text("Add a local folder, FTP, or SMB server to get started.")
                                 .font(.subheadline)
                                 .foregroundStyle(.secondary)
                         }
@@ -133,6 +133,10 @@ struct NetworkHomeView: View {
             return LocalSource(root: url, bookmarkData: bookmark)
         case .smb(let host, let username, let password):
             return SMBSource(host: host, username: username, password: password)
+        case .ftp(let host, let port, let username, let password, let passive):
+            return FTPSource(host: host, port: port, username: username, password: password, passive: passive)
+        case .webdav(let url, let username, let password):
+            return WebDAVSource(url: url, username: username, password: password)
         default:
             return nil
         }

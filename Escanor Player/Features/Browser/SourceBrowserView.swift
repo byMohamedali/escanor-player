@@ -62,10 +62,8 @@ struct SourceBrowserView: View {
         .task {
             await load()
         }
-        .sheet(item: $selectedMediaItem) { mediaItem in
-            PlayerView(
-                mediaItem: mediaItem
-            )
+        .fullScreenCover(item: $selectedMediaItem) { item in
+            PlayerView(mediaItem: item)
                 .ignoresSafeArea()
         }
         .sheet(item: $selectedItem) { item in
